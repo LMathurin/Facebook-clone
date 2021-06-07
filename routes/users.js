@@ -1,7 +1,13 @@
 const router = require("express").Router();
-const Joi = require('joi');
+const joi = require('joi');
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
+
+
+//import {  } from '../controllers/posts';
+
+//router.post('/signin', signin);
+
 
 
 //Update User
@@ -41,6 +47,7 @@ router.delete("/:id", async (req, res) => {
       return res.status(403).json("You can delete only your account!");
     }
   });  
+
 
 //Get User
 router.get("/:id", async (req, res) => {

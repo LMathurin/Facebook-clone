@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 const config = require('config');
 const jwt = require('jsonwebtoken');
+const { commentSchema } = require('./comments');
 
-const userSchema = new mongoose.Schema(
-  {
+
+const addUserSchema = new mongoose.Schema({
+
     username: {
         type: String,
         required: true,
@@ -34,23 +36,27 @@ const userSchema = new mongoose.Schema(
         type: Array,
         default: [],
     },
-    isAdmin: {
-        type: Boolean,
-        default: false,
-    },
-    desc: {
+    bio: {
         type: String,
         max: 80
     },
-    city: {
+    location: {
         type: String,
         max: 80 
     },
- },
- { timestamps: true }    
+    education: {
+        type: String,
+        trim: true,
+    },
+    
+    friends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+   },
+
+   { timestamps: true }    
 );
 
-const User = mongoose.model('User', userSchema);
+
+const User = mongoose.model('User', addUserSchema);
 
 function validateUser(user) {
     const schema = Joi.object({
@@ -59,8 +65,7 @@ function validateUser(user) {
     password: Joi.string().min(5).max(1024).required(),
     });
     return schema.validate(user);
-}    
+};    
 
 exports.User = User;
 exports.validateUser = validateUser;
-module.exports = mongoose.model("User", userSchema);

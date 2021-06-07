@@ -1,11 +1,14 @@
 const Joi = require('joi');
-const config = require('config');
+const config = require('config/');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require("../models/user");
+const User = require('../models/user');
+const express = require('express');
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+
+
+router.post('/add-user', async (req, res) => {
     try {
       const { error } = validateLogin(req.body);
       if (error) return res.status(400).send(error.details[0].message);
@@ -35,18 +38,38 @@ function validateLogin(req) {
 
 router.post("/register", async (req, res) => {
     try {
-      //generate new password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(req.body.password, salt);
+      let { email, password, passwordCheck, displayName } = req.body;
+
+      if (!email || !password || !passwordCheck)
+        return res
+        .status(400)
+        .json({ msg: "Not all fields have been entered." });
+      if (password.length < 5) 
+        return res
+        .status(400)
+        .json({msg: "The password needs to be at least 5 characters long." });
+      if (password !== passwordCheck) 
+        return res
+        .status(400)
+        .json ({ msg: "Enter the same password twice for verification." });
+
+      const existingUser = await User.findOne({ email: email });
+      if (existingUser) 
+        return res
+         .status(400)
+         .json({ msg: "An account with this email already exists." });
+
+      if (!displayName) displayName = email;
+
+      const salt = await bcrypt.genSalt();
+      const passwordHash = await bcrypt.hash(password, salt);
   
-      //create new user
       const newUser = new User({
         username: req.body.username,
         email: req.body.email,
         password: hashedPassword,
       });
   
-      //save user and respond
       const user = await newUser.save();
       res.status(200).json(user);
     } catch (err) {
@@ -61,7 +84,7 @@ router.post("/login", async (req, res) => {
       !user && res.status(404).json("user not found");
   
       const validPassword = await bcrypt.compare(req.body.password, user.password)
-      !validPassword && res.status(400).json("wrong password")
+      !validPassword && res.status(400).json("Invalid password")
   
       res.status(200).json(user)
     } catch (err) {
@@ -69,4 +92,12 @@ router.post("/login", async (req, res) => {
     }
 });
   
-  module.exports = router;
+router.get ("/logout", async (req, res) => { req.logout();
+   return res.json({
+      message: 'Successfully logged out'
+  });
+});
+
+
+module.exports = router;
+  
